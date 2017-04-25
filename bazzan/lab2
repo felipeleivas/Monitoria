@@ -1,0 +1,32 @@
+(define-struct elemento (nome simbolo numero-atomico serie))
+
+
+
+;nome 
+(define-struct curso( nome numero-integrantes ano-criação chefe))
+
+
+(define (area centro ponto-externo)
+  (*(sqrt(+(sqr (-(posn-x centro) (posn-x ponto-externo))) (sqr(-(posn-y centro) (posn-y ponto-externo))))) pi))
+
+(define (plota-curva p1)
+  (and(start 200 200) (draw-solid-line p1 (make-posn (+(posn-x p1) 100) (posn-y p1)))))
+
+(define-struct num-raiz (num raiz))
+
+(define (num-e-sua-raiz x)
+  (make-num-raiz x (sqrt x)))
+
+
+(define-struct correntista( nome agencia gerente))
+(define-struct gerente (nome agencia))
+
+(define (cria-gerente cliente nome-gerente)
+  (cond
+    [(symbol=? (cliente-gerente) nome-gerente) (make-gerete nome-gerente (cliente-agencia))]
+    [else "Gerente não corresponde ao correntista"]
+   ))
+
+
+(define-struct DVD(nome diretor ator-principal ano-lançamento valor-locação))
+(define-struct DVD(nome diretor ator-principal ano-lançamento valor-locação classico))
