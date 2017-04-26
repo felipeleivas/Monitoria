@@ -1,32 +1,66 @@
+;;Exercicio 1
 (define-struct elemento (nome simbolo numero-atomico serie))
-
-
-
-;nome 
+;;elemento é uma estrutura,
+;;(make-elemento nome simbolo numero-atomico serie), onde 
+;;nome : simbolo, que representa o nome do elemento
+;;simbolo: simbolo, que representa o simbolo do elemento na tabela periodica
+;;numero-atomico: numero, que representa o numero atomico do elemento
+;;serie: simbolo que representa a série do elemento na tabela periodica
+;;Exercicio 2
+;curso  
 (define-struct curso( nome numero-integrantes ano-criação chefe))
-
-
+;;Exercicio 3
+;area: posn posn -> numero
+;; dano o centro(posn) e um ponto da circunferencia(posn) calcula a area do circulo
 (define (area centro ponto-externo)
   (*(sqrt(+(sqr (-(posn-x centro) (posn-x ponto-externo))) (sqr(-(posn-y centro) (posn-y ponto-externo))))) pi))
-
+(check-within (area (make-posn 1 1) (make-posn 1 0)) pi 0.01)
+;;Exercicio 4
 (define (plota-curva p1)
   (and(start 200 200) (draw-solid-line p1 (make-posn (+(posn-x p1) 100) (posn-y p1)))))
-
+(check-expect (plota-curva (make-posn 10 10)) true)
+;;Exercicio 5
+;;num-raiz é uma estrutura do tipo
 (define-struct num-raiz (num raiz))
-
+;;recebe
 (define (num-e-sua-raiz x)
   (make-num-raiz x (sqrt x)))
 
-
+;;Exercicio 6
 (define-struct correntista( nome agencia gerente))
 (define-struct gerente (nome agencia))
 
 (define (cria-gerente cliente nome-gerente)
   (cond
-    [(symbol=? (cliente-gerente) nome-gerente) (make-gerete nome-gerente (cliente-agencia))]
+    [(symbol=? (correntista-gerente cliente) nome-gerente) (make-gerente nome-gerente (correntista-agencia cliente))]
     [else "Gerente não corresponde ao correntista"]
    ))
 
-
+;;Exercicio 7
 (define-struct DVD(nome diretor ator-principal ano-lançamento valor-locação))
-(define-struct DVD(nome diretor ator-principal ano-lançamento valor-locação classico))
+;(define-struct DVD(nome diretor ator-principal ano-lançamento valor-locação classico))
+                                                                                         
+;;Exercicio 9
+;;a)
+(define-struct veiculo (classe capacidade tração-animal ano-lincenciamento))
+;;veiculo é uma estrutura,
+;;(make-veiculo classe capacidade tração ano-lincenciamento), onde
+;;classe: simbolo que representa a classe do veiculo, Exemplo: SUV, Van, ...
+;;capacidade: numero que representa quantos passageiros no maximo o veiculo pode carregar
+;;tração: booleano, que diz se é tração animal ou não, true diz que a tração é animal
+;;ano-lincenciamento: numero, que diz o ano do primeiro lincenciamento do veiculo
+;;b)
+(define SUV(make-veiculo 'SUV 7 false 2014))
+(define Carroça(make-veiculo 'Carroça 2 true 2014))
+(define Sedan(make-veiculo 'Sedan 5 false 2014))
+
+;;c)
+;; estimativa-combustivel: veiculo-> numero
+;;consome um veiculo e retorna a estimativa de combustivel gasto para percorrer um kilometro
+
+(define (estimativa-combustivel veiculo)
+  (cond
+    [(veiculo-tração-animal veiculo) 0]
+    [else (* 0.2 (veiculo-capacidade veiculo))]
+    )
+)
