@@ -1,0 +1,79 @@
+;;Elemento atomico: string symbol number string
+;;seu nome, seu símbolo químico e seu número atômico e sua série química
+;1
+(define-struct elemento (nome simbolo numero serie))
+(define Li(make-elemento "litio" 'Li 3 "metal-alcalino"))
+(define Na(make-elemento "sodio" 'Na 11 "metal-alcalino"))
+(define Be(make-elemento "berilio" 'Be 4 "metal-alcalino-terroso"))
+(define Sc(make-elemento "escanadio" 'Sc 21 "metal-de-transição"))
+(define La(make-elemento "lantanio" 'La 57 "lantanoides"))
+(define Ac(make-elemento "berilio" 'Ac 89 "actinoides"))
+(define Al(make-elemento "berilio" 'Al 13 "metal-pos-transição"))
+(define O(make-elemento "oxigenio" 'O 8 "não-metal"))
+(define N(make-elemento "nitrogenio" 'N 7 "não-metal"))
+(define F(make-elemento "fluor" 'F 9 "halogenios"))
+(define Xe(make-elemento "xenonio" 'Xe 54 "gas-nobre"))
+;2
+;;lista de elementos
+(define L1(cons O(cons N(cons F(cons Li(cons Na(cons Be(cons Sc(cons La(cons Ac(cons Al(cons Xe empty))))))))))))
+;3
+(define (numero-atomico lista-elemento simbolo)
+  (cond
+    [(empty? lista-elemento) 0]
+    [(symbol=? (elemento-simbolo (first lista-elemento)) simbolo) (elemento-numero (first lista-elemento))]
+    [else (numero-atomico (rest lista-elemento) simbolo)]
+   )
+)
+(check-expect (numero-atomico L1 'O) 8)
+(check-expect (numero-atomico L1 'Q) 0)
+
+;;4
+(define (busca-metais-alcalinos lista-elementos)
+  (cond
+    [(empty? lista-elementos) empty]
+	[(string=? (elemento-serie(first lista-elementos)) "metal-alcalino") (cons (first lista-elementos) (busca-metais-alcalinos (rest lista-elementos)))]
+	[else (busca-metais-alcalinos (rest lista-elementos))]
+  )
+)
+(check-expect (busca-metais-alcalinos L1) (cons Li(cons Na empty)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-struct professor(nome turma nivel nome-alunos))
+(define-struct aluno(nome turma nivel professor))
+(define tiaraju(make-professor"tiaraju" 'U 9000 (cons "juba"(cons "Leivas" empty))))
+(define (lista-alunos professor)
+  (cond
+    [(empty? (professor-nome-alunos professor)) empty]
+    [else (cons (make-aluno (first(professor-nome-alunos professor)) (professor-turma professor) (professor-nivel professor) (professor-nome professor))
+                (lista-alunos(make-professor (professor-nome professor) (professor-turma professor) (professor-nivel professor) (rest(professor-nome-alunos professor))))
+           )]))
+(check-expect(lista-alunos tiaraju)(list (make-aluno "juba" 'U 9000 "tiaraju") (make-aluno "Leivas" 'U 9000 "tiaraju")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define-struct curso(nome numero-alunos))
+(define CIC(make-curso "CIC" 54)) 
+(define ECP(make-curso "ECP" 0))
+(define (inclui-curso lista X)
+  (cond
+    [(empty? lista) (cons X empty)]
+    [(curso=? X (first lista)) lista]
+    [else (cons (first lista) (inclui-curso (rest lista) X))]
+  ))
+(define (curso=? X Y)
+  (cond
+    [(and(string=? (curso-nome X) (curso-nome Y)) (= (curso-numero-alunos X) (curso-numero-alunos Y))) true]
+    [else false]))
+
+(check-expect (inclui-curso (cons CIC empty) ECP) (list (make-curso "CIC" 54) (make-curso "ECP" 0)))
+(check-expect(inclui-curso (inclui-curso (cons CIC empty) ECP) ECP)(list (make-curso "CIC" 54) (make-curso "ECP" 0)))
+;;;;;;;;;;;;;;;;;;;;;;;;
+(define LISTA1 (list (make-curso "CIC" 54) (make-curso "ECP" 0)))
+(define (consulta-curso lista nome)
+  (cond
+    [(empty? lista) "Não consta"]
+    [(string=? (curso-nome(first lista)) nome) (curso-numero-alunos (first lista))]
+    [else (consulta-curso (rest lista) nome)]))
+(check-expect (consulta-curso LISTA1 "CIC") 54)
+(check-expect (consulta-curso LISTA1 "CIasC") "Não consta")
+(check-expect (consulta-curso LISTA1 "ECP") 0)
+;;;;;;;;;;;;;;;;;;;
