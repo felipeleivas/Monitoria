@@ -1,0 +1,101 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname LAB4) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+;1. Escreva uma função que retorna uma lista ordenada de números (ordem crescente) a partir de uma
+;lista de números e símbolos.
+;Ssort: lista-de-numeros-simbolos -> lista-numeros
+;;recebe uma lista de numeros e simbolos e retorna uma lista com os numeros da lista original ordenados de forma crescente
+
+(define (Ssort lst)
+  (remove-ordena lst empty))
+(define (remove-ordena lst answer)
+  (cond
+    [(empty? lst) answer]
+    [(number? (first lst)) (remove-ordena (rest lst) (insert-sort (first lst) answer))]
+    [else (remove-ordena (rest lst) answer)]
+  )
+)
+
+(define (insert-sort number lst)
+  (cond
+    [(empty? lst) (cons number empty)]
+    [(< (first lst) number) (cons (first lst) (insert-sort number (rest lst)))]
+    [else (cons number lst)]))
+(define LISTA (list 1 2 'e 'i 999 545 21 164 10864 168 4168 164 41 3 1 5 3))
+;(check-expect (Ssort LISTA) (list 1 1 2 3 3 5 21 41 164 164 168 545 999 4168 10864))
+
+
+; Uma AB (árvore binária) é:
+; 1. empty
+; 2. (make-nó id i e d), onde
+; id : Número (representa o id do nó)
+; i : Símbolo (representa a informação armazenada no nó)
+; e : AB (representa a subárvore esquerda do nó)
+; d : AB (representa a subárvore direita do nó)
+; Uma ABP (árvore binária de pesquisa) é:
+; 1. empty
+; 2. (make-nó id info esq dir) se:
+; id : Número (representa o id do nó)
+; i : Símbolo (representa a informação armazenada no nó)
+; esq : ABP (subárvore da esquerda)
+; dir : ABP (subárvore da direita)
+; Todos os ’id’s dos nós em esq são menores que ’id’ do nó atual
+; Todos od ’id’s dos nós em dir são maiores que ’id’ do nó atual
+(define-struct nó (id info esq dir))
+
+;;;;;;
+;(a) Defina a função valor-na-AB? que, dada uma árvore binária (AB), determina se um dado
+;valor, recebido como parâmetro, encontra-se na árvore ou não;
+;(b) Crie a função quantos-maiores-na-AB que, dados uma árvore binária (AB) e um valor, determina
+;quantos valores da referida árvore são maiores que o valor dado;
+;(c) Apresente uma função que insere um nodo (dado por um número e um símbolo) em uma AB.
+;Assuma que o nodo a ser inserido não existe na AB.
+(define AB1 (make-nó 5 'oi (make-nó 4 'ak (make-nó 8 'ak empty empty) empty) (make-nó 7 'ak empty (make-nó 0 'ak empty empty))))
+;a
+(define (valor-na-ab? value tree)
+  (cond
+    [(empty? tree) false]
+    [(= (nó-id tree) value) true]
+    [else (or (valor-na-ab? value (nó-esq tree)) (valor-na-ab? value (nó-dir tree)))]))
+(check-expect (valor-na-ab? 4 AB1) true)
+(check-expect (valor-na-ab? 1 AB1) false)
+
+
+;b
+(define (quantos-maiores-na-AB value tree)
+  (cond
+    [(empty? tree) 0]
+    [(> (nó-id tree) value) (+ 1 (quantos-maiores-na-AB value (nó-esq tree)) (quantos-maiores-na-AB value (nó-dir tree)))]
+    [else (+ (quantos-maiores-na-AB value (nó-esq tree)) (quantos-maiores-na-AB value (nó-dir tree)))]))
+(check-expect (quantos-maiores-na-AB 4 AB1) 3)
+(check-expect (quantos-maiores-na-AB 0 AB1) 4)
+;c
+(define (insere-nodo nodo tree)
+  (cond
+    [(empty? tree) nodo]
+    [(> (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (nó-esq tree) (insere-nodo nodo (nó-dir tree)))]
+    [(< (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (insere-nodo nodo (nó-esq tree)) (nó-dir tree))]))
+(insere-nodo (make-nó 58 'as empty empty) AB1)
+
+
+
+;;make-abp: ab -> abp
+;;recebe uma arvore binaria e retorna uma ABP com os mesmos dados da AB
+(define (make-abp ab)
+  (make-abp2 (make-list-ab ab) empty))
+
+
+;;make-abp2: ab empty -> abp
+(define (make-abp2 ab abp)
+  (cond
+    [(empty? ab) abp]
+    [else (make-abp2 (rest ab) (insere-nodo (first ab) abp))]))
+    
+;;make-list-ab: ab -> list
+;recebe uma AB e retorna uma lista de seus nodos
+(define (make-list-ab ab )
+  (cond
+    [(empty? ab) empty]
+    [else (cons (make-nó (nó-id ab) (nó-info ab) empty empty) (append(make-list-ab (nó-dir ab)) (make-list-ab (nó-esq ab)))  )]))
+
+
