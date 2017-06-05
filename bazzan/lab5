@@ -1,6 +1,3 @@
-;; The first three lines of this file were inserted by DrRacket. They record metadata
-;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname LAB4) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 ;1. Escreva uma função que retorna uma lista ordenada de números (ordem crescente) a partir de uma
 ;lista de números e símbolos.
 ;Ssort: lista-de-numeros-simbolos -> lista-numeros
@@ -75,7 +72,7 @@
     [(empty? tree) nodo]
     [(> (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (nó-esq tree) (insere-nodo nodo (nó-dir tree)))]
     [(< (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (insere-nodo nodo (nó-esq tree)) (nó-dir tree))]))
-(insere-nodo (make-nó 58 'as empty empty) AB1)
+;(insere-nodo (make-nó 58 'as empty empty) AB1)
 
 
 
@@ -99,3 +96,72 @@
     [else (cons (make-nó (nó-id ab) (nó-info ab) empty empty) (append(make-list-ab (nó-dir ab)) (make-list-ab (nó-esq ab)))  )]))
 
 
+;3. Desenvolva a função conta-descendentes-com-dada-cor-olhos, que, dado um genitor (e,
+;portanto, seus descendentes) e uma cor, conta o número de descendentes deste genitor, excluindo
+;este, que tem a dada cor de olhos. Considere a estrutura genitor conforme vista em aula:
+(define-struct genitor (filhos nome data olhos))
+;Um elemento genitor de Genitor é uma estrutura
+;(make-genitor lf n d o) onde lf: Lista-de-filhos n: Símbolo o: Símbolo d: Número
+;uma Lista-de-filhos é:
+;empty ou (cons p lf)
+;onde p: genitor
+;lf: Lista-de-filhos
+ 
+
+ 
+ (define (conta-descendentes-com-dada-cor-olhos genitor cor-olho)
+	(cond
+	[(empty? (genitor-filhos genitor)) 0]
+	[(symbol=? (genitor-olhos (first(genitor-filhos genitor))) cor-olho) (+ 1 (conta-descendentes-com-dada-cor-olhos
+                                                                             (make-genitor (rest (genitor-filhos genitor)) (genitor-nome genitor) (genitor-data genitor) (genitor-olhos genitor)) cor-olho)
+                                                                                 (conta-descendentes-com-dada-cor-olhos (first(genitor-filhos genitor)) cor-olho))]
+        [else (+(conta-descendentes-com-dada-cor-olhos(make-genitor (rest (genitor-filhos genitor)) (genitor-nome genitor) (genitor-data genitor) (genitor-olhos genitor)) cor-olho)
+                                                                                 (conta-descendentes-com-dada-cor-olhos (first(genitor-filhos genitor)) cor-olho))]
+	
+	))
+
+(define Bart(make-genitor empty 'Bart 5 'Castanho))
+(define Lisa(make-genitor empty 'Lisa 5 'Azul))
+(define Maggie(make-genitor empty 'Maggie 1 'Castanho))
+(define Homer(make-genitor (cons Bart(cons Lisa (cons Maggie empty))) 'Homer 30 'Castanho))
+(define Herb (make-genitor empty 'Herb 35 'Azul))
+(define Mona (make-genitor (cons Homer (cons Herb empty)) 'Mona 75 'Azul ))
+(define Abraham (make-genitor (cons Homer(cons Herb empty)) 'Abraham 80 'Castanhos))
+(define Marge(make-genitor (cons Bart(cons Lisa (cons Maggie empty))) 'Marge 30 'Azul)) 
+(define Patty (make-genitor empty 'Patty 35 'Preto))
+(define Ling (make-genitor empty 'Ling 1 'Preto))
+(define Selma (make-genitor (cons Ling empty) 'Selma 32 'Preto))
+(define Clancy (make-genitor (cons Patty(cons Marge (cons Selma empty))) 'Clancy 70 'Preto))
+(define Jackie (make-genitor (cons Patty(cons Marge (cons Selma empty))) 'Jackie 80 'Azul))
+
+
+(check-expect(conta-descendentes-com-dada-cor-olhos Jackie 'Castanho) 2)
+(check-expect (conta-descendentes-com-dada-cor-olhos Mona 'Azul) 2)
+(check-expect (conta-descendentes-com-dada-cor-olhos Homer 'Azul) 1)
+(check-expect (conta-descendentes-com-dada-cor-olhos Abraham 'Preto) 0)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
