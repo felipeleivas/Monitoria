@@ -1,167 +1,139 @@
-;1. Escreva uma função que retorna uma lista ordenada de números (ordem crescente) a partir de uma
-;lista de números e símbolos.
-;Ssort: lista-de-numeros-simbolos -> lista-numeros
-;;recebe uma lista de numeros e simbolos e retorna uma lista com os numeros da lista original ordenados de forma crescente
-
-(define (Ssort lst)
-  (remove-ordena lst empty))
-(define (remove-ordena lst answer)
+;;;;;;1
+;;função dobro :numero->numero
+(define (dobro x)
+  (* 2 x))
+;;função map: func: num->num lista -> numero
+(define (e-map func lista)
   (cond
-    [(empty? lst) answer]
-    [(number? (first lst)) (remove-ordena (rest lst) (insert-sort (first lst) answer))]
-    [else (remove-ordena (rest lst) answer)]
-  )
-)
+    [(empty? lista) empty]
+    [else (cons (func (first lista)) (e-map func (rest lista)))]))
 
-(define (insert-sort number lst)
+(check-expect (e-map dobro (list 1 2 3 4 5)) (list 2 4 6 8 10))
+;b primeiro-simbolo: lista-simbolo -> simbolo
+(define (primeiro-simbolo lista)
   (cond
-    [(empty? lst) (cons number empty)]
-    [(< (first lst) number) (cons (first lst) (insert-sort number (rest lst)))]
-    [else (cons number lst)]))
-(define LISTA (list 1 2 'e 'i 999 545 21 164 10864 168 4168 164 41 3 1 5 3))
-;(check-expect (Ssort LISTA) (list 1 1 2 3 3 5 21 41 164 164 168 545 999 4168 10864))
-
-
-; Uma AB (árvore binária) é:
-; 1. empty
-; 2. (make-nó id i e d), onde
-; id : Número (representa o id do nó)
-; i : Símbolo (representa a informação armazenada no nó)
-; e : AB (representa a subárvore esquerda do nó)
-; d : AB (representa a subárvore direita do nó)
-; Uma ABP (árvore binária de pesquisa) é:
-; 1. empty
-; 2. (make-nó id info esq dir) se:
-; id : Número (representa o id do nó)
-; i : Símbolo (representa a informação armazenada no nó)
-; esq : ABP (subárvore da esquerda)
-; dir : ABP (subárvore da direita)
-; Todos os ’id’s dos nós em esq são menores que ’id’ do nó atual
-; Todos od ’id’s dos nós em dir são maiores que ’id’ do nó atual
-(define-struct nó (id info esq dir))
-
-;;;;;;
-;(a) Defina a função valor-na-AB? que, dada uma árvore binária (AB), determina se um dado
-;valor, recebido como parâmetro, encontra-se na árvore ou não;
-;(b) Crie a função quantos-maiores-na-AB que, dados uma árvore binária (AB) e um valor, determina
-;quantos valores da referida árvore são maiores que o valor dado;
-;(c) Apresente uma função que insere um nodo (dado por um número e um símbolo) em uma AB.
-;Assuma que o nodo a ser inserido não existe na AB.
-(define AB1 (make-nó 5 'oi (make-nó 4 'ak (make-nó 8 'ak empty empty) empty) (make-nó 7 'ak empty (make-nó 0 'ak empty empty))))
-;a
-(define (valor-na-ab? value tree)
+    [(empty? lista) 'ListaSemSimbolo]
+    [(symbol? (first lista)) (first lista)]
+    [else (primeiro-simbolo (rest lista))]))
+(define (projeta func lista)
   (cond
-    [(empty? tree) false]
-    [(= (nó-id tree) value) true]
-    [else (or (valor-na-ab? value (nó-esq tree)) (valor-na-ab? value (nó-dir tree)))]))
-(check-expect (valor-na-ab? 4 AB1) true)
-(check-expect (valor-na-ab? 1 AB1) false)
+    [(empty? lista) empty]
+    [else (cons (primeiro-simbolo (first lista)) (projeta func (rest lista)))]))
+(check-expect (projeta primeiro-simbolo (list (list 'a 'b) (list ) (list 'c 'd 'e))) (list 'a 'ListaSemSimbolo 'c))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Questão 2
+(define (soma-3 x y z)
+  (+ x y z))
+(define (soma-3.2 x y z)
+  (+ x (+ y z)))
+(define (produto-3 x y z)
+  (* x y z))
 
-
-;b
-(define (quantos-maiores-na-AB value tree)
+(define (mesmo-resultado? func1 func2)
   (cond
-    [(empty? tree) 0]
-    [(> (nó-id tree) value) (+ 1 (quantos-maiores-na-AB value (nó-esq tree)) (quantos-maiores-na-AB value (nó-dir tree)))]
-    [else (+ (quantos-maiores-na-AB value (nó-esq tree)) (quantos-maiores-na-AB value (nó-dir tree)))]))
-(check-expect (quantos-maiores-na-AB 4 AB1) 3)
-(check-expect (quantos-maiores-na-AB 0 AB1) 4)
-;c
-(define (insere-nodo nodo tree)
+    [(= (func1 1 3 5) (func2 1 3 5)) true]
+    [else false]))
+(check-expect (mesmo-resultado? soma-3 soma-3.2) true)
+(check-expect (mesmo-resultado? produto-3 soma-3.2) false)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Questão 3
+;; sierpinski : .......... ............ ............ -> true
+;; desenha um triângulo de Sierpinski com vértices nos 3 pontos passados como
+;; argumentos, e devolve true. Se triângulo passado como argumento tiver
+;; dimensões muito pequenas, nada é desenhado.
+(define (sierpinski a b c)
   (cond
-    [(empty? tree) nodo]
-    [(> (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (nó-esq tree) (insere-nodo nodo (nó-dir tree)))]
-    [(< (nó-id nodo) (nó-id tree)) (make-nó (nó-id tree) (nó-info tree) (insere-nodo nodo (nó-esq tree)) (nó-dir tree))]))
-;(insere-nodo (make-nó 58 'as empty empty) AB1)
-
-
-
-;;make-abp: ab -> abp
-;;recebe uma arvore binaria e retorna uma ABP com os mesmos dados da AB
-(define (make-abp ab)
-  (make-abp2 (make-list-ab ab) empty))
-
-
-;;make-abp2: ab empty -> abp
-(define (make-abp2 ab abp)
+    [(too-small? a b c) true]
+    [else
+     (local ((define a-b (mid-point a b))
+             (define b-c (mid-point b c))
+             (define c-a (mid-point a c)))
+       (and
+        (draw-triangle a b c) (sierpinski a a-b c-a)  (sierpinski b a-b b-c) (sierpinski c c-a b-c)))]))
+;; mid-point : Posn Posn -> Posn
+;; computa o ponto médio entre os 2 pontos passados como argumentos
+;; exemplos: ...
+(define (mid-point a-posn b-posn)
+  (make-posn
+   (mid (posn-x a-posn) (posn-x b-posn))
+   (mid (posn-y a-posn) (posn-y b-posn))))
+;; mid : Number Number -> Number
+;; computa a média entre os números passados como argumento
+;; exemplos: ...
+(define (mid a b)
+  (/ (+ a b) 2))
+;; draw-triangle : Posn Posn Posn -> true
+;; ...
+(define (draw-triangle a b c)
+  (and (draw-solid-line a  b 'red) (draw-solid-line c  b 'red) (draw-solid-line a  c 'red)))
+;; too-small? : Posn Posn Posn -> Boolean
+(define (too-small? a b c)
   (cond
-    [(empty? ab) abp]
-    [else (make-abp2 (rest ab) (insere-nodo (first ab) abp))]))
+    [(< (posn-size a b) 5) true]
+    [else false]))
+
+(define (posn-size x1 x2)
+  (sqrt (+ (sqr (- (posn-x x2) (posn-x x1))) (sqr (- (posn-y x1) (posn-y x2)))))) 
+;;(start 400 400)  
+(define A (make-posn 200 0))
+(define B (make-posn 27 300))
+(define C (make-posn 373 300))
+;;(sierpinski A B C)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define-struct bola (x y incr-x incr-y))
+;; Um elemento bola de Bola é uma estrutura
+;; (make-bola x y incr-x incr-y)
+;; onde x, y, incr-x e incr-y são do tipo Número
+
+
+
+
+(define (desenha-e-apaga uma-bola)
+  (and
+   (draw-solid-disk (make-posn (bola-x uma-bola)
+                               (bola-y uma-bola))
+                    RAIO COR)
+   (sleep-for-a-while ESPERA)
+   (clear-solid-disk (make-posn (bola-x uma-bola)
+                                (bola-y uma-bola))
+                     RAIO COR)))
+
+(define (move-bola uma-bola)
+  (make-bola (+ (bola-x uma-bola)
+                (bola-incr-x uma-bola))
+             (+ (bola-y uma-bola)
+                (bola-incr-y uma-bola))
+             (bola-incr-x uma-bola)
+             (bola-incr-y uma-bola)))
+
+;;Faz a bola andar conforme as regras
+(define (move-até-que-fora uma-bola)
+  (cond
     
-;;make-list-ab: ab -> list
-;recebe uma AB e retorna uma lista de seus nodos
-(define (make-list-ab ab )
-  (cond
-    [(empty? ab) empty]
-    [else (cons (make-nó (nó-id ab) (nó-info ab) empty empty) (append(make-list-ab (nó-dir ab)) (make-list-ab (nó-esq ab)))  )]))
+    
+    [(and (>= 0 (- (bola-x uma-bola) RAIO)) (> 0 (bola-incr-x uma-bola))) (faz-ação-bola (make-bola  (bola-x uma-bola) (bola-y uma-bola) (* -1 (bola-incr-x uma-bola))(bola-incr-y uma-bola)))]
+    [(and (<= LARG (+ (bola-x uma-bola) RAIO)) (< 0 (bola-incr-x uma-bola))) (faz-ação-bola (make-bola  (bola-x uma-bola) (bola-y uma-bola) (* -1 (bola-incr-x uma-bola))(bola-incr-y uma-bola)))]
+    [(and (>= 0 (- (bola-y uma-bola) RAIO)) (> 0 (bola-incr-y uma-bola))) (faz-ação-bola (make-bola  (bola-x uma-bola)(bola-y uma-bola)  (bola-incr-x uma-bola) (* -1(bola-incr-y uma-bola))))]
+    [(<= ALT (+ (bola-y uma-bola) RAIO)) true]
+    [else (faz-ação-bola uma-bola)]))
+
+(define (faz-ação-bola uma-bola)
+  (and (desenha-e-apaga uma-bola)
+              (move-até-que-fora (move-bola uma-bola))))
+;; Dimensão da tela
+(define LARG 500)
+(define ALT 500)
+;; Dimensão e cor da bola
+(define RAIO 10)
+(define COR 'red)
+;; Duração da espera
+(define ESPERA .01)
+;; Cria a tela, movimenta bola até ela cair e pára
+(start LARG ALT)
+(define uma-bola (make-bola 20 20 5 +1))
+
+(move-até-que-fora (make-bola 1 1 -5 -1))
+(stop)
 
 
-;3. Desenvolva a função conta-descendentes-com-dada-cor-olhos, que, dado um genitor (e,
-;portanto, seus descendentes) e uma cor, conta o número de descendentes deste genitor, excluindo
-;este, que tem a dada cor de olhos. Considere a estrutura genitor conforme vista em aula:
-(define-struct genitor (filhos nome data olhos))
-;Um elemento genitor de Genitor é uma estrutura
-;(make-genitor lf n d o) onde lf: Lista-de-filhos n: Símbolo o: Símbolo d: Número
-;uma Lista-de-filhos é:
-;empty ou (cons p lf)
-;onde p: genitor
-;lf: Lista-de-filhos
- 
-
- 
- (define (conta-descendentes-com-dada-cor-olhos genitor cor-olho)
-	(cond
-	[(empty? (genitor-filhos genitor)) 0]
-	[(symbol=? (genitor-olhos (first(genitor-filhos genitor))) cor-olho) (+ 1 (conta-descendentes-com-dada-cor-olhos
-                                                                             (make-genitor (rest (genitor-filhos genitor)) (genitor-nome genitor) (genitor-data genitor) (genitor-olhos genitor)) cor-olho)
-                                                                                 (conta-descendentes-com-dada-cor-olhos (first(genitor-filhos genitor)) cor-olho))]
-        [else (+(conta-descendentes-com-dada-cor-olhos(make-genitor (rest (genitor-filhos genitor)) (genitor-nome genitor) (genitor-data genitor) (genitor-olhos genitor)) cor-olho)
-                                                                                 (conta-descendentes-com-dada-cor-olhos (first(genitor-filhos genitor)) cor-olho))]
-	
-	))
-
-(define Bart(make-genitor empty 'Bart 5 'Castanho))
-(define Lisa(make-genitor empty 'Lisa 5 'Azul))
-(define Maggie(make-genitor empty 'Maggie 1 'Castanho))
-(define Homer(make-genitor (cons Bart(cons Lisa (cons Maggie empty))) 'Homer 30 'Castanho))
-(define Herb (make-genitor empty 'Herb 35 'Azul))
-(define Mona (make-genitor (cons Homer (cons Herb empty)) 'Mona 75 'Azul ))
-(define Abraham (make-genitor (cons Homer(cons Herb empty)) 'Abraham 80 'Castanhos))
-(define Marge(make-genitor (cons Bart(cons Lisa (cons Maggie empty))) 'Marge 30 'Azul)) 
-(define Patty (make-genitor empty 'Patty 35 'Preto))
-(define Ling (make-genitor empty 'Ling 1 'Preto))
-(define Selma (make-genitor (cons Ling empty) 'Selma 32 'Preto))
-(define Clancy (make-genitor (cons Patty(cons Marge (cons Selma empty))) 'Clancy 70 'Preto))
-(define Jackie (make-genitor (cons Patty(cons Marge (cons Selma empty))) 'Jackie 80 'Azul))
-
-
-(check-expect(conta-descendentes-com-dada-cor-olhos Jackie 'Castanho) 2)
-(check-expect (conta-descendentes-com-dada-cor-olhos Mona 'Azul) 2)
-(check-expect (conta-descendentes-com-dada-cor-olhos Homer 'Azul) 1)
-(check-expect (conta-descendentes-com-dada-cor-olhos Abraham 'Preto) 0)
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
