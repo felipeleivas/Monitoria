@@ -1,0 +1,558 @@
+(require htdp/draw)
+;;Exercicio 1
+;;letra a) definição das dimensões da tela (largura e altura)
+(define largura 1080)
+(define altura  720)
+;(start largura altura)
+;;letra B) definição do tamanho das naves(raio de colisão)
+(define tam-nave 10)
+;;letra C) definição do tamanho dos tiros
+(define tam-tiro 4)
+;;letra d) definição da velocidade vertical dos tiros, de baixo para cima
+(define vel-tiro -5)
+;;letra E) definição do tamanho das naves inimigas
+(define tam-enemy 7)
+;;letra F) definição do tamanho das explosoes
+(define tam-explosão 5)
+;;letra g) definição da duração das explosoes
+(define dur-explosão 100)
+;;define a velocidade da nave q o jogador controla
+(define VELOCIDADE 5)
+;;define a velocidade da nave q o jogador controla
+(define VELOCIDADE-inimigo 1)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;exercicio 2
+;;letra a)
+;;  entra com as coordenadas da nave em forma de posn, e a função cria a nave
+;; ex: (make-nave (make-posn 1000 500))=> (make-nave (make-posn 1000 500))
+(define-struct nave (centro))
+;; uma nave é (make-nave p) onde p: posn (representa o centro )
+
+;; letra b) um inimigo é (make-inimigo p vel tipo)p: posn(representa o centro) vel:posn(representa a velocidade(variação do x e variação do y) do inimigo)
+;;tipo:simbolo('A ou 'B)representa qual tipo de inimigo é
+(define-struct inimigo (centro-inimigo vel-inimigo tipo-inimigo))
+;;;;;
+;;letra C) um tiro é (make-tiro p) p:posn(representa o centro do tiro)
+(define-struct tiro (centro-tiro))
+;;;;
+;;letra d) uma explosão é (make-explosão p cont) onde p:posn(representa o centro) cont:numero(contador que verifica até quando a explosão fica ''viva'')
+(define-struct explosão( centro-explosão contador-explosão))
+
+;;;;;;;;;;;;;;;;;;;
+;;exercicio 3
+;;destrutor é
+;; um inimigo Ou 
+;; explosão
+;;;;;;;;;;;;;;;;
+;;Exercicio 4
+;;lista-de-tiro é
+;; empty
+;; (cons tiro ldt), onde:
+;;                       tiro é uma estrutura do tipo: (make-tiro)
+;;                       ldt é  uma lista-de-tiro
+
+
+;;lista-de-destrutor é
+;;empty
+;;(cons d ldd) onde:
+;;                           d: destrutor 
+;;                           ou uma lista de destrutor
+
+;;estado-do-jogo é uma estrutura contendo uma nave, uma lista de tiro e uma lista de destrutores, devem ser inseridos como as definições ja descritas
+;; recebe: nave-jogo(estrutura)
+;;         ldt(lista de tiro)
+;;         ldd(lista de destrutor)
+
+(define-struct estado-do-jogo(nave-jogo ldt ldd))
+;;exemplo: (make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-posn 500 600)(cons (make-posn 500 400) empty))
+;;(cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty))
+;;;;;;;;;;;;;;;;;;
+;;Exercicio 5
+;;jogador-atingido?: estado-de-jogo=>booleano
+;; recebe todos os dados de estado-jogo e gera true caso o jogador tenha sido atingido e false caso o jogador não tenha sido atingido
+
+(define (jogador-atingido? estado-de-jogo1)
+  (cond
+    ;; verifica se ainda há destrutores
+    [(empty? (estado-do-jogo-ldd estado-de-jogo1)) false]
+    ;; verifica se o jogador é atingido
+    [else (or
+  (cond 
+    [(explosão? (first(estado-do-jogo-ldd estado-de-jogo1))) (cond 
+                                                        [(<=(sqrt(+(sqr(-(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1)))
+                                                                         (posn-x(explosão-centro-explosão(first(estado-do-jogo-ldd estado-de-jogo1))))))  
+                                                                     
+                                                                     (sqr(-(posn-y(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1))) 
+                                                                         (posn-y(explosão-centro-explosão(first(estado-do-jogo-ldd estado-de-jogo1)))))))) (+ tam-nave tam-explosão)) true]
+                                                        
+                                                        [(>(sqrt(+(sqr(-(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1)))
+                                                                         (posn-x(explosão-centro-explosão(first(estado-do-jogo-ldd estado-de-jogo1))))))  
+                                                                     
+                                                                     (sqr(-(posn-y(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1))) 
+                                                                        (posn-y(explosão-centro-explosão(first(estado-do-jogo-ldd estado-de-jogo1)))))))) (+ tam-nave tam-explosão))false])]
+     [(inimigo? (first(estado-do-jogo-ldd estado-de-jogo1))) (cond 
+                                                        [(<=(sqrt(+(sqr(-(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1)))
+                                                                         (posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo1))))))  
+                                                                      
+                                                                     (sqr(-(posn-y(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1))) 
+                                                                         (posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo1)))))))) (+ tam-nave tam-enemy)) true]
+                                                        
+                                                        [(>(sqrt(+(sqr(-(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1)))
+                                                                         (posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo1))))))  
+                                                                     
+                                                                     (sqr(-(posn-y(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1))) 
+                                                                         (posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo1)))))))) (+ tam-tiro tam-enemy))false])])
+  ;;faz a recursão para os outros elementos da lista ldd
+  (jogador-atingido?(make-estado-do-jogo (make-nave(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo1))) (estado-do-jogo-ldt estado-de-jogo1) 
+                       (rest(estado-do-jogo-ldd estado-de-jogo1)))))]))
+;;testes/exeplos
+(check-expect (jogador-atingido?(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-posn 500 600)(cons (make-posn 500 400) empty)) 
+                               (cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty)))) false)
+
+(check-expect (jogador-atingido?(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-posn 500 600)(cons (make-posn 500 400) empty)) 
+                                   (cons(make-explosão(make-posn 500 660) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty)))) true)
+(check-expect (jogador-atingido?(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-posn 500 600)(cons (make-posn 500 400) empty)) 
+                                   (cons(make-explosão(make-posn 500 670) 2)(cons(make-inimigo (make-posn 500 655) (make-posn 5 5) 'A) empty)))) true)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Exercicio 6:
+;;jogador-venceu: estado de jogo=>booleano
+;; recebe todos os dados do estado-do-jogo e ve se os tiros atingiram os inimigos, quando o tiro atinge o inimigo o inimigo vira uma explosão e o tiro segue, e a função
+;;retorna true caso o jogador tenha destruido todos inimigos e false caso o jogador tenha deixado algum inimigo para tras
+
+ (define (jogador-venceu estado-do-jogo1)
+   (cond
+     [(empty? (estado-do-jogo-ldd estado-do-jogo1)) true]
+     [(explosão? (first(estado-do-jogo-ldd estado-do-jogo1))) 
+      (jogador-venceu(make-estado-do-jogo (make-nave(nave-centro(estado-do-jogo-nave-jogo estado-do-jogo1)))(estado-do-jogo-ldt estado-do-jogo1) 
+                       (rest(estado-do-jogo-ldd estado-do-jogo1))))]
+     [else (and
+            (cond
+              [(empty? (estado-do-jogo-ldt estado-do-jogo1)) false] 
+              
+             [(<=(sqrt(+(sqr(-(posn-x(tiro-centro-tiro(first(estado-do-jogo-ldt estado-do-jogo1))))
+                              (posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-do-jogo1))))))  
+                                            
+                        (sqr(-(posn-y(tiro-centro-tiro(first(estado-do-jogo-ldt estado-do-jogo1)))) 
+                              (posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-do-jogo1)))))))) (+ tam-tiro tam-enemy))
+              ;;recursão
+              (jogador-venceu(make-estado-do-jogo (make-nave(nave-centro(estado-do-jogo-nave-jogo estado-do-jogo1))) (estado-do-jogo-ldt estado-do-jogo1) 
+                       (rest(estado-do-jogo-ldd estado-do-jogo1))))]
+                                                        
+             [(>(sqrt(+(sqr(-(posn-x(tiro-centro-tiro(first(estado-do-jogo-ldt estado-do-jogo1))))
+                             (posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-do-jogo1))))))  
+                                                                     
+                       (sqr(-(posn-y(tiro-centro-tiro(first(estado-do-jogo-ldt estado-do-jogo1)))) 
+                             (posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-do-jogo1))))))))(+ tam-tiro tam-enemy))
+              ;;recursão
+              (jogador-venceu(make-estado-do-jogo (make-nave(nave-centro(estado-do-jogo-nave-jogo estado-do-jogo1)))(rest(estado-do-jogo-ldt estado-do-jogo1)) 
+                       (estado-do-jogo-ldd estado-do-jogo1)))]) 
+             (jogador-venceu(make-estado-do-jogo (make-nave(nave-centro(estado-do-jogo-nave-jogo estado-do-jogo1)))(estado-do-jogo-ldt estado-do-jogo1)  
+                       (rest(estado-do-jogo-ldd estado-do-jogo1)))))]))
+   
+;;testes/exemplos:
+(check-expect (jogador-venceu(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                 (cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty)))) false)                                                       
+ 
+(check-expect (jogador-venceu(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                  (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty)))) true) 
+                                                        
+(check-expect (jogador-venceu(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                  (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 608) (make-posn 5 5) 'A) empty)))) true) 
+(check-expect (jogador-venceu(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty))  
+                                  (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 608) (make-posn 5 5) 'A)
+                                                                                 (cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty)))) )true)
+(check-expect (jogador-venceu(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn  500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                  (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 608) (make-posn 5 5) 'A)
+                                                                                 (cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty)))) )true) 
+                                                        
+                                                        
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Exercicio 7
+;;avança-estado é
+;; uma função que recebido um estado-do-jogo gera um outro estado do jogo, onde ela avança uma unidade do tempo, e os dados dos objetos são atualizados
+
+(define(avança-estado estado-jogo) 
+  (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo);; a nave por enquanto não se movimenta, então permanece igual  
+         (cond;;faz com q o tiro avance uma unidade de tempo
+                         [(empty? (estado-do-jogo-ldt estado-jogo)) empty]
+                         [else (cons(make-tiro(make-posn(posn-x(tiro-centro-tiro(first(estado-do-jogo-ldt estado-jogo))))(+(posn-y(tiro-centro-tiro(first(estado-do-jogo-ldt estado-jogo)))) vel-tiro)))
+                        (estado-do-jogo-ldt (avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) (rest(estado-do-jogo-ldt estado-jogo)) (estado-do-jogo-ldd estado-jogo)))))])
+         
+         (cond;verifica se é uma explosão ou um inimigo
+         [(empty? (estado-do-jogo-ldd estado-jogo)) empty]
+         [(explosão? (first(estado-do-jogo-ldd estado-jogo))) (cond
+                                       
+               [(< 0 (-(explosão-contador-explosão (first(estado-do-jogo-ldd estado-jogo))) 1)) (cons(make-explosão(explosão-centro-explosão(first(estado-do-jogo-ldd estado-jogo)))
+                                                                                                                   (- (explosão-contador-explosão(first(estado-do-jogo-ldd estado-jogo))) 1))
+                                        (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) (estado-do-jogo-ldt estado-jogo) (rest(estado-do-jogo-ldd estado-jogo))))))]
+                               
+         
+               [else  (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo)))))])]  
+                                                               
+        [else  (cond ;;verifica caso os inimigos sairiam da tela 
+                                
+                [(and(>(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))) largura);; verifica se ele saiu na largura
+                     (>(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura)) ;; verifica se ele saiu na altura
+                                 
+                (cons(make-inimigo(make-posn(-(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                            (-(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                                                       (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                       ;;recursão
+                (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+                                ;; caso eles saiam pela direita, e para baixo, faz reaparecer na esquerda e em cima
+                                
+                [(and(<(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))) 0)
+                     (<(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))0)) 
+                                 
+                (cons(make-inimigo(make-posn(+(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                            (+(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                                                       (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                       ;;recursão
+                (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+                                 ;; caso eles saiam para cima e para esquerda, faz com que reapareçam na direita e em baixo
+                                 
+                [(and(<(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))) 0)
+                    (>(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                
+                 (cons(make-inimigo(make-posn(+(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                             (-(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                                                 (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                  ;;recursão
+                 (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+                                  ;; caso eles saiam para baixo e para esquerda faz reaparecer em cima e na direita
+                                  
+                 [(and(>(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                      (<(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))0)) 
+                                 
+                 (cons(make-inimigo(make-posn(-(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                             (+(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                                                        (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                  ;;recursão
+                (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+                                  ;; caso eles saiam para direita a para cima, faz reaparecer em baixo e na esquerda
+                                   
+                [(<(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))0) 
+                                       
+                (cons(make-inimigo(make-posn(+(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                              (+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))))
+                                                       (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                  ;;recursão
+                (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+                ;;caso eles saiam só pela esquerda, eles retornam pela direita
+                                    
+                [(>(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))) largura) 
+                                      
+                (cons(make-inimigo(make-posn(-(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))largura)
+                                              (+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))))
+                                                       (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+                ;;recursão
+               (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+               ;;caso eles saiam pela direita, eles retornam pela esquerda
+                                    
+               [(<(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))) 0) 
+                                     
+               (cons(make-inimigo(make-posn(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))
+                                           (+ altura (+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))))
+                                                              (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+               ;;recursão
+               (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+               ;;caso eles saiam por cima, eles reaparecem em baixo
+                                
+               [(>(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura) 
+                                      
+               (cons(make-inimigo(make-posn(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))
+                                           (-(+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))altura))
+                                                      (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+               ;;recursão
+               (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))]
+               ;;caso ele saia por baixo, reaparece em cima
+
+               [else (cons(make-inimigo(make-posn(+(posn-x(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-x(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo)))))
+                                                 (+(posn-y(inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-jogo))))(posn-y(inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))))))
+                                                          (inimigo-vel-inimigo(first(estado-do-jogo-ldd estado-jogo))) (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-jogo))))
+               ;;recursão
+               (estado-do-jogo-ldd(avança-estado (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo) empty (rest(estado-do-jogo-ldd estado-jogo))))))])])))
+               ;; caso os inimigos não saiam da tela
+                                
+ ;;testes/exemplos:                              
+(check-expect(avança-estado(make-estado-do-jogo 
+                            (make-nave(make-posn 500 650))
+                            (cons(make-tiro(make-posn  500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                            (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 608) (make-posn 5 5) 'A)(cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty)))) )
+             (make-estado-do-jogo
+ (make-nave (make-posn 500 650))
+ (cons (make-tiro (make-posn 500 595)) (cons (make-tiro (make-posn 500 395)) empty))
+ (cons (make-explosão (make-posn 500 300) 1) (cons (make-inimigo (make-posn 505 613) (make-posn 5 5) 'A) (cons (make-inimigo (make-posn 505 413) (make-posn 5 5) 'A) empty)))))                                
+ 
+(check-expect(avança-estado(make-estado-do-jogo 
+                            (make-nave(make-posn 500 650))
+                            (cons(make-tiro(make-posn  500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                            (cons(make-explosão(make-posn 500 300) 1) (cons(make-inimigo (make-posn 1077 717) (make-posn 5 5) 'A)(cons(make-inimigo (make-posn 1 2) (make-posn -5 -5) 'A) empty)))) )
+(make-estado-do-jogo
+ (make-nave (make-posn 500 650))
+ (cons (make-tiro (make-posn 500 595)) (cons (make-tiro (make-posn 500 395)) empty))
+ (cons (make-inimigo (make-posn 2 2) (make-posn 5 5) 'A) (cons (make-inimigo (make-posn 1076 717) (make-posn -5 -5) 'A) empty))))
+
+(check-expect (avança-estado(make-estado-do-jogo 
+                            (make-nave(make-posn 500 650))
+                            (cons(make-tiro(make-posn  500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                            (cons(make-explosão(make-posn 500 300) 1) (cons(make-inimigo (make-posn 2 717) (make-posn -5 5) 'A)(cons(make-inimigo (make-posn 1077 2) (make-posn 5 -5) 'A) 
+                                                                      (cons(make-inimigo (make-posn 2 500) (make-posn -5 5) 'A)(cons(make-inimigo (make-posn 1077 700) (make-posn 5 5) 'A)
+                                                                      (cons(make-inimigo (make-posn 500 2) (make-posn 5 -5) 'A)(cons(make-inimigo (make-posn 500 717) (make-posn 5 5) 'A)empty)))))))))
+
+(make-estado-do-jogo
+ (make-nave (make-posn 500 650))
+ (cons (make-tiro (make-posn 500 595)) (cons (make-tiro (make-posn 500 395)) empty))
+ (cons
+  (make-inimigo (make-posn 1077 2) (make-posn -5 5) 'A)
+  (cons
+   (make-inimigo (make-posn 2 717) (make-posn 5 -5) 'A)
+   (cons
+    (make-inimigo (make-posn 1077 505) (make-posn -5 5) 'A)
+    (cons (make-inimigo (make-posn 2 705) (make-posn 5 5) 'A) (cons (make-inimigo (make-posn 505 717) (make-posn 5 -5) 'A) (cons (make-inimigo (make-posn 505 2) (make-posn 5 5) 'A) empty))))))))
+;;;;;;;;;;;;;
+;;Exercicio 8
+;;elimina-inimigos é:
+;; uma função que recebe um estado-do-jogo e devolve um novo estado-de-jogo,onde todos os inimigos que estejam sendo atingidos por algum tiro sejam transformados em explosões, inimigos 
+;;não são destruidos por tocar outros inimigos ou explosões:
+
+(define(elimina-inimigos estado-jogo1)
+ (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo1) (estado-do-jogo-ldt estado-jogo1)
+  (cond
+     [(empty? (estado-do-jogo-ldd estado-jogo1)) empty]
+     [(explosão? (first(estado-do-jogo-ldd estado-jogo1))) 
+      (cons (first(estado-do-jogo-ldd estado-jogo1)) (estado-do-jogo-ldd(elimina-inimigos (make-estado-do-jogo (estado-do-jogo-nave-jogo estado-jogo1) (estado-do-jogo-ldt estado-jogo1) 
+                                                                                                               (rest(estado-do-jogo-ldd estado-jogo1))))))]
+     [else  (cons (elimina-inimigo (estado-do-jogo-ldt estado-jogo1) (first(estado-do-jogo-ldd estado-jogo1)))
+                  (estado-do-jogo-ldd(elimina-inimigos(make-estado-do-jogo(estado-do-jogo-nave-jogo estado-jogo1) (estado-do-jogo-ldt estado-jogo1) 
+                                                                          (rest(estado-do-jogo-ldd estado-jogo1))))))]            
+    ))) 
+             
+                 
+             
+             
+         
+;; elimina-inimigo: lista-de-tiro detruidor=> destruidor
+;; recebe uma lista de tiro e um inimigo, verifica se o inimigo foi destruido por algum tiro, caso ele tenha sido o transforma em explosão, caso não ele devolve o mesmo 
+;; inimigo
+             
+(define(elimina-inimigo ldt d )
+   (cond
+                      
+             [(empty? ldt) d]
+             [(<=(sqrt(+(sqr(-(posn-x(tiro-centro-tiro(first ldt)))
+                              (posn-x(inimigo-centro-inimigo d))))  
+                                            
+                        (sqr(-(posn-y(tiro-centro-tiro(first ldt)))
+                              (posn-y(inimigo-centro-inimigo d)))))) (+ tam-tiro tam-enemy))
+             ;;transforma o inimigo que foi atingido por um tiro em explosão
+              (make-explosão (inimigo-centro-inimigo d) dur-explosão)] 
+                                                        
+             [(>(sqrt(+(sqr(-(posn-x(tiro-centro-tiro(first ldt)))
+                             (posn-x(inimigo-centro-inimigo d))))  
+                                                                     
+                       (sqr(-(posn-y(tiro-centro-tiro(first ldt))) 
+                             (posn-y(inimigo-centro-inimigo d)))))) (+ tam-tiro tam-enemy))
+           ;;
+              (elimina-inimigo (rest ldt) d)]))
+
+
+
+;;teste/exemplos
+(check-expect(elimina-inimigos(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                  (cons(make-explosão(make-posn 500 300) 2) (cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty))))
+             (make-estado-do-jogo (make-nave (make-posn 500 650)) (cons (make-tiro (make-posn 500 600)) (cons (make-tiro (make-posn 500 400)) empty)) 
+                                 (cons (make-explosão (make-posn 500 300) 2) (cons (make-explosão (make-posn 500 408) 100) empty))))
+
+(check-expect (elimina-inimigos(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                               (cons(make-inimigo (make-posn 500 608) (make-posn 5 5) 'A) (cons(make-inimigo (make-posn 500 408) (make-posn 5 5) 'A) empty))))
+(make-estado-do-jogo (make-nave (make-posn 500 650)) (cons (make-tiro (make-posn 500 600)) (cons (make-tiro (make-posn 500 400)) empty))
+                     (cons (make-explosão (make-posn 500 608) 100) (cons (make-explosão (make-posn 500 408) 100) empty))))
+
+
+(check-expect (elimina-inimigos(make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                                (cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty)))) (make-estado-do-jogo (make-nave(make-posn 500 650))
+                                                                                      (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+                               (cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A) empty))))
+  
+
+;;Exercicio 9 
+;;desenha-estado é:
+;;uma função que receve um estado-do-jogo e o desenha na tela
+
+
+(define(desenha-estado estado-de-jogo0)
+  (and
+   (draw-solid-rect (make-posn(- (posn-x(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo0))) (/ tam-nave 2)) (- (posn-y(nave-centro(estado-do-jogo-nave-jogo estado-de-jogo0))) (/ tam-nave 2))) tam-nave tam-nave 'orange)
+   (cond 
+     [(empty? (estado-do-jogo-ldt estado-de-jogo0)) (cond 
+                                                      
+     [(empty? (estado-do-jogo-ldd estado-de-jogo0)) true]
+     
+     [(explosão? (first(estado-do-jogo-ldd estado-de-jogo0))) 
+      (and (draw-solid-disk (explosão-centro-explosão(first(estado-do-jogo-ldd estado-de-jogo0))) tam-explosão 'red)
+           (desenha-estado(make-estado-do-jogo(estado-do-jogo-nave-jogo estado-de-jogo0) empty (rest(estado-do-jogo-ldd estado-de-jogo0)))))]
+     [(inimigo? (first(estado-do-jogo-ldd estado-de-jogo0))) (cond
+      
+                                                               [(symbol=? (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-de-jogo0))) 'A)
+                                                                (and (draw-solid-disk (inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo0))) tam-enemy 'green)
+           (desenha-estado(make-estado-do-jogo(estado-do-jogo-nave-jogo estado-de-jogo0) empty (rest(estado-do-jogo-ldd estado-de-jogo0)))))]
+                                                               [(symbol=? (inimigo-tipo-inimigo(first(estado-do-jogo-ldd estado-de-jogo0))) 'B)
+                                                                (and (draw-solid-disk (inimigo-centro-inimigo(first(estado-do-jogo-ldd estado-de-jogo0))) tam-enemy 'blue)
+           (desenha-estado(make-estado-do-jogo(estado-do-jogo-nave-jogo estado-de-jogo0) empty (rest(estado-do-jogo-ldd estado-de-jogo0)))))])])]
+     
+     
+     [else (and(draw-solid-rect(make-posn(- (posn-x(tiro-centro-tiro(first(estado-do-jogo-ldt estado-de-jogo0))))(/ tam-tiro 2)) (- (posn-y(tiro-centro-tiro(first(estado-do-jogo-ldt estado-de-jogo0))))
+                        (/ tam-tiro 2))) (/ tam-tiro 2) tam-tiro  'black ) (desenha-estado(make-estado-do-jogo (estado-do-jogo-nave-jogo estado-de-jogo0) 
+                                          (rest(estado-do-jogo-ldt estado-de-jogo0)) (estado-do-jogo-ldd estado-de-jogo0))))])))
+   
+                                             
+;;teste/exemplo   
+;(check-expect(desenha-estado (make-estado-do-jogo (make-nave(make-posn 500 650)) (cons(make-tiro(make-posn 500 600)) (cons(make-tiro(make-posn 500 400)) empty)) 
+;                                 (cons(make-explosão(make-posn 500 300) 2)(cons(make-inimigo (make-posn 500 50) (make-posn 5 5) 'A)(cons(make-inimigo (make-posn 500 100) (make-posn 5 5) 'B) empty))))) true)   
+   
+
+;;tiros-out? ldt-> ldt
+;; a função recebe uma lista de tiro e verifica se algum deles saiu da tela para cima, caso tenha saido ela o elimina da lista
+;ex: (list (make-tiro(make-posn 500 600))(make-tiro(make-posn 500 100))(make-tiro(make-posn 500 -100)))-> 
+;;   (list (make-tiro(make-posn 500 600))(make-tiro(make-posn 500 100)))
+
+(define (tiros-out? tiros)
+  (cond
+    [(empty? tiros) empty]
+    [(<(posn-y(tiro-centro-tiro(first tiros))) 0) (tiros-out? (rest tiros))]
+    [else (cons(first tiros)(tiros-out? (rest tiros)))]
+  )
+)
+
+;;elimina-malvados: ldt ldd-> ldd
+;; a função recebe uma lista de tiros e uma lista de destruidores e caso um inimigo seja atingido por um tiro, o tiro é consumido da ldt e o inimigo se torna uma 
+;; explosão
+(define(elimina-malvados ldt ldd)
+   (cond
+     [(empty? ldd) empty]
+     [(explosão? (first ldd)) (cons (first ldd) (elimina-malvados ldt (rest ldd)))]
+     [else  (cons (elimina-inimigo ldt (first ldd))   (elimina-malvados ldt (rest ldd)))]
+    )
+)
+;;avança-estado-do-jogo: estado-do-jogo-> estado-do-jogo
+;;uma função que recebido um estado-do-jogo gera um outro estado do jogo, onde ela avança uma unidade do tempo, e os dados dos objetos são atualizados, e
+;; ela recebe dados do usuario
+
+(define (avança-estado-do-jogo estado-jogo)
+  (local(
+         (define tecla (get-key-event)))
+    (cond 
+    [(symbol? tecla) (cond 
+                         [(symbol=? tecla 'left)   (avança-estado (make-estado-do-jogo(make-nave (make-posn(-(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-jogo)))  VELOCIDADE)
+                                                                                                   (posn-y(nave-centro(estado-do-jogo-nave-jogo estado-jogo))))) 
+                                                                              (tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                                                              (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                         
+                         [(symbol=? tecla 'right)  (avança-estado (make-estado-do-jogo(make-nave (make-posn(+  (posn-x(nave-centro(estado-do-jogo-nave-jogo estado-jogo)))  VELOCIDADE)
+                                                                        (posn-y(nave-centro(estado-do-jogo-nave-jogo estado-jogo)))))
+                                                                             (tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                                                              (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                         
+                         [(symbol=? tecla 'up)     (avança-estado (make-estado-do-jogo(make-nave (make-posn(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-jogo)))
+                                                                        (- (posn-y(nave-centro(estado-do-jogo-nave-jogo estado-jogo))) VELOCIDADE)))
+                                                                             (tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                                                             (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                         
+                         [(symbol=? tecla 'down)  (avança-estado (make-estado-do-jogo(make-nave (make-posn(posn-x(nave-centro(estado-do-jogo-nave-jogo estado-jogo))) 
+                                                                        (+ (posn-y(nave-centro(estado-do-jogo-nave-jogo estado-jogo))) VELOCIDADE)))
+                                                                              (tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                                                              (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                         
+                         [else (avança-estado (make-estado-do-jogo(estado-do-jogo-nave-jogo estado-jogo) (tiros-out?(estado-do-jogo-ldt estado-jogo)) 
+                                                                  (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                     )]
+                      
+   [(char? tecla) (cond 
+                    
+                    [(or (char=? #\T tecla) (char=? #\t tecla)) 
+                     (avança-estado(make-estado-do-jogo(estado-do-jogo-nave-jogo estado-jogo)
+                                               (tiros-out?(cons(make-tiro(nave-centro(estado-do-jogo-nave-jogo estado-jogo)))(estado-do-jogo-ldt estado-jogo))) 
+                                               (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                    
+                    
+                    [else (avança-estado (make-estado-do-jogo(estado-do-jogo-nave-jogo estado-jogo)(tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                                             (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))]
+                  )]
+    
+   [else (avança-estado (make-estado-do-jogo(estado-do-jogo-nave-jogo estado-jogo)(tiros-out?(estado-do-jogo-ldt estado-jogo))
+                                           (elimina-malvados(estado-do-jogo-ldt estado-jogo) (estado-do-jogo-ldd estado-jogo))))])))
+    
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;  
+
+
+(define estado-de-jogo1  (make-estado-do-jogo (make-nave(make-posn 500 650)) empty 
+                           (list(make-inimigo (make-posn 500 50)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 489 78) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                                (make-inimigo (make-posn 650 456)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 120 187) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                                (make-inimigo (make-posn 548 50)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 254 245) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                                (make-inimigo (make-posn 324 368)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 50 478) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                                (make-inimigo (make-posn 46 987)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 345 872) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                                (make-inimigo (make-posn 198 785)  (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'A)
+                                (make-inimigo (make-posn 145 646) (make-posn VELOCIDADE-inimigo VELOCIDADE-inimigo) 'B)
+                            )))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;; jogo: estado-de-jogo-> estado-de-jogo
+;; Essa função recebe um estado do jogo, verifica se o jogador morreu, ou ganhou e depois avança o jogo, uma unidade de tempo
+
+(define (jogo estado-jogo)
+  (cond
+    [(jogador-atingido? estado-jogo) (local((define tibia(clear-all))
+                                            (define loser(draw-solid-string (make-posn 520 360)"Você Perdeu" )))(end-of-time))]
+    [(jogador-venceu  estado-jogo)  (local((define tibia(clear-all))
+                                           (define loser(draw-solid-string (make-posn 520 360)"Você Ganhou" )))(end-of-time))]
+    [else (local( (define tibia(clear-all))
+                  (define urgot(desenha-estado estado-jogo)
+                    ))
+            (avança-estado-do-jogo estado-jogo))])) 
+
+
+
+(define space-invaders
+  (and
+   (start largura altura )
+   (big-bang .001 estado-de-jogo1)
+   (on-tick-event jogo )
+   ) 
+  )
+     
+      
+    
+   
+   
+   
+   
+   
+   
+ 
