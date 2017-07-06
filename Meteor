@@ -1,0 +1,54 @@
+(define MAX_HEIGHT 500)
+(define MAX_WIDTH 500)
+(define-struct meteor(cord diameter deltax deltay color))
+(define-struct building(cordx weidth height color damaged))
+(define-struct scenario (lsm lsb)) 
+
+(define (draw-scenario lsm lsb)
+  (and (draw-meteors lsm) (draw-buildings lsb)))
+
+(define (draw-meteors lsm)
+  (cond
+    [(empty? lsm) true]
+    [else (local ((define meteor(first lsm)))
+          (and  (draw-solid-disk (meteor-cord meteor) (/ (meteor-diameter meteor) 2) (meteor-color meteor))
+                (draw-meteors (rest lsm))))]))
+(define (draw-buildings lsb)
+  (cond
+    [(empty? lsb) true]
+    [else (local ((define building(first lsb)))
+          (cond
+            [(boolean=? true (building-damaged building)) (and  (draw-solid-rect  (make-posn (building-cordx building) (- MAX_HEIGHT (building-height))) (building-weidth building)
+                                                                        (building-height building) 'red)(draw-buildings (rest lsb)))]
+                
+          [else(and  (draw-solid-rect  (make-posn (building-cordx building) (- MAX_HEIGHT (building-height))) (building-weidth building)
+                                                                        (building-height building) (building-color building))
+                (draw-buildings (rest lsb)))]))]))
+
+(define (avança-estado lsm)
+  (cond
+    [(empty? lsm) empty]
+    [else (local ( (define meteor (first lsm)) (define position(meteor-cord meteor)))
+            (cons (make-meteor (make-posn (+ (posn-x position) (meteor-deltax)) (+ (posn-y position) (meteor-deltay)))
+                               (meteor-diameter meteor) (meteor-deltax meteor) (meteor-deltay meteor) (meteor-color meteor))
+                  (avança-estado (rest lsm))))]))
+
+(define (colidiu? scenario)
+   (make-scenario (avança-estado (colidiu-meteors (scenario-lsm scenario) (scenario-lsb scenario))) 
+                       (colidiu-predios  (scenario-lsm scenario) (scenario-lsb scenario))))
+;;percoore todos os meteoros pra ver se algum colidiu com algum predio e
+(define (colidiu-meteors lsm lsb)
+  (cond
+    [(empty? lsm) empty]
+    [(colide-meteoro-algum-predio (first lsm) lsb) (colidiu-meteors (rest lsm) lsb)]
+    [else (cons (first lsm) (colidiu-meteors (rest lsm) lsb))]))
+;;ve se o meteoro bateu em algum predio ou saiu da tela
+(define (colide-meteoro-algum-predio meteor lsb)
+  (cond
+    [(empty? lsb) false]
+    [(colidiu-meteoro-no-predio meteor (first lsb)) true]
+    [(or (not(> MAX_HEIGHT (posn-x (meteor-cord)) 0)) (not(> MAX_HEIGHT (posn-y (meteor-cord)) 0))) true]
+    [else (colide-meteoro-algum-predio meteor (rest lsb))]))
+
+
+                               
