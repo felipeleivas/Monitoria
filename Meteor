@@ -83,7 +83,7 @@
 
 (define (simulation scenario)
   (cond
-    [(empty? (scenario-lsm scenario)) false]
+    [(empty? (scenario-lsm scenario)) (and (sleep-for-a-while 2) (stop))]
     [else (local ((define x(draw-scenario scenario)))(simulation (colidiu? scenario)))]))
 
 (define LSM (list (make-meteor (make-posn 5 5) 10 1 2 'black)
@@ -97,6 +97,8 @@
                   (make-building 80 20 80 'blue false)
                   (make-building 200 20 200 'blue false)
                   (make-building 300 20 50 'blue false)))
+
+(define (meteoro-de-pegasus)(and
 (start MAX_HEIGHT MAX_WIDTH)
 (simulation (make-scenario LSM LSB))
-(stop)
+))
