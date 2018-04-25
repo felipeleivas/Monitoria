@@ -1,0 +1,27 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-beginner-abbr-reader.ss" "lang")((modname permutação) (read-case-sensitive #t) (teachpacks ((lib "draw.rkt" "teachpack" "htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "draw.rkt" "teachpack" "htdp")))))
+
+
+(define (filtra x lst)
+  (cond
+    [(empty? lst) empty]
+    [(equal? (first lst) x )  (rest lst)]
+    [else (cons (first lst) (filtra x (rest lst)))]))
+
+;;recebe: lista de letras já postas, lista de possibilidades, lista que começa como a de possibilidades e vai diminuindo para controlar a recursão -> lista de palavras
+(define (permutação lsr lstp lst)
+  (cond
+    
+    [(and (empty? lstp )(empty? lst)) (list lsr)]
+    [(empty? lst) empty]
+    [else (append  (permutação (cons(first lst)lsr) (filtra (first lst) lstp) (filtra (first lst) lstp) ) (permutação lsr lstp (rest lst)))]))
+
+(define ABC (list 'a 'b 'c 'd))
+
+(permutação empty ABC ABC)
+
+
+
+
+
